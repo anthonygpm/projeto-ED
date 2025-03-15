@@ -27,6 +27,38 @@ typedef struct {
     Materia disciplina[TAM];
 } Ofertas;
 
+typedef struct {
+    Materia disciplinas[TAM]; //lista de disciplinas no periodo
+    int quantDisciplinas;     //quantidade de materias por periodo;  
+} Periodo;
+
+void iniciandoPeriodos(Periodo periodo[10]){
+    for (int i = 0;i < 10; i++){
+        periodo[i].quantDisciplinas = 0;
+    }
+}
+
+void organizarperiodos(Ofertas* ofertas, Periodo periodos[10]){
+    for (int i = 0; i < TAM; i++){
+        Materia materia = ofertas->disciplina[i];
+        if (materia.periodo >= 1 && materia.periodo <= 10){
+            int indiceperiodo = materia.periodo - 1;
+            periodos[indiceperiodo].disciplinas[periodos[indiceperiodo].quantDisciplinas] = materia;
+            periodos[indiceperiodo].quantDisciplinas++;
+        }
+    }
+}
+
+void printasperiodos(Periodo periodos[10]){
+    for (int i = 0; i < 10; i++){
+        printf("Periodo: %d\n", i + 1);
+        for (int j = 0; j < periodos[i].quantDisciplinas; j++) {
+            printarMateria(periodos[i].disciplinas[j], 1, 1, 1, 1, 1, 1, 1, 1, 1);
+        }
+        printf("\n");
+    }
+}
+
 void processarPreRequisitos(char *preRequisitosStr, Materia *materia) {
     materia->qtdPreRequisitos = 0; 
     int len = strlen(preRequisitosStr);
@@ -81,6 +113,7 @@ int main() {
     int i = 0;
     char linha[256];
 
+    // preenche a struct com as disciplinas 
     while (fgets(linha, sizeof(linha), arquivo) != NULL && i < 46) {
         int periodo, cargaHoraria, completa;
         char codigo[TAM], nome[TAM], preRequisitosStr[256], enfase[TAM], horarioDeAula[TAM], diaDeAula[TAM];
@@ -100,7 +133,6 @@ int main() {
         i++;
     }
 
-
     int periodoUsuario;
 
     printf("Bem vindo ao programa de aconselhamento do curso de Ciência da Computação!\n");
@@ -109,12 +141,12 @@ int main() {
 
     // considera que as matérias do período passado já foram concluídas
     int j = 0;
-
     while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
         oferta.disciplina[j].completa = 1;
         j++;
     }
 
+    // verifica reprovações
     if (periodoUsuario > 1) {
         char reprovado;
         char mat[TAM];
@@ -140,6 +172,8 @@ int main() {
                 while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
                    if(strcmp(mat, oferta.disciplina[j].codigo) == 0) {
                     oferta.disciplina[j].completa = 0;
+                    printf("Matéria marcada como reprovada.\n");
+                    break;
                    }
                    j++;
                 }
@@ -151,17 +185,51 @@ int main() {
             scanf("%c", &reprovado);
         }        
     }
+
+    // verifica se o aluno já cursou alguma matéria optativa
     if (periodoUsuario > 1){
-        char eletiva;
-        printf("Voce ja pagou alguma eletiva? [S/N] ");
-        scanf("%c", eletiva);
+    char optativa;
+    printf("Você já cursou alguma matéria optativa? [S/N] ");
+    getchar();
+    scanf("%c", &optativa);
+    while(1){
+        if (optativa == 'N') break;
+        else {
+            char mat[TAM];
+            printf("Qual matéria optativa você cursou? (Digite o código da disciplina)\n");
+            j = 0;
+
+            while (j < 46) {
+                if (oferta.disciplina[j].periodo == VAZIO) printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
+                j++;
+            }
+
+            scanf("%s", mat);
+
+            j = 0;
+            while (j < 46) {
+                if(strcmp(mat, oferta.disciplina[j].codigo) == 0) {
+                    oferta.disciplina[j].completa = 1;
+                    printf("Matéria marcada como cursada.\n");
+                    break;
+                }
+                j++;
+            }
+        }
+
+        printf("Você já cursou mais alguma? [S/N] ");
         getchar();
+        scanf("%c", &optativa);
     }
+}
+fclose(arquivo);
 
-
-    fclose(arquivo);
-
+Periodo periodos[10];
+iniciandoPeriodos(periodos);
+organizarperiodos(&oferta, periodos);
+printasperiodos(periodos);
     
 
-    return 0;
+
+return 0;
 }
