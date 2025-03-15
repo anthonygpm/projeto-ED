@@ -72,7 +72,7 @@ void printarMateria(Materia m, int cod, int nome, int per, int pre, int ch, int 
 int main() {
     setlocale(LC_ALL, "Portuguese");
     Ofertas oferta;
-    FILE *arquivo = fopen("materias.txt", "r");
+    FILE *arquivo = fopen("C:/Users/Lucas Teodosio/vs/projetoED/projeto-ED/materias.txt", "r");
     if (!arquivo) {
         printf("Erro ao abrir o arquivo.\n");
         return 1;
@@ -150,6 +150,12 @@ int main() {
             getchar();
             scanf("%c", &reprovado);
         }        
+    }
+    if (periodoUsuario > 1){
+        char eletiva;
+        printf("Voce ja pagou alguma eletiva? [S/N] ");
+        scanf("%c", eletiva);
+        getchar();
     }
 
 
