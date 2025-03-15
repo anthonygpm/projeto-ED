@@ -44,3 +44,4 @@ COMP401	ciencia_de_dados -999 COMP370 72 2 0 T3T4 segqua
 COMP402	microcontroladores_e_aplicacoes	-999 -999 72 2 0 T1T2 segqua
 COMP403	seguranca_de_sistemas_computacionais -999 COMP368 72 4 0 T1T2 segqua
 COMP404	calculo_3 -999 COMP363 72 123 0 T1T2 terqui
+
