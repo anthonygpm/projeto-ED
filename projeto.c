@@ -163,18 +163,19 @@ int main() {
     while(1){
         if (optativa == 'N') break;
         else {
+            char mat[TAM];
             printf("Qual matéria optativa você cursou? (Digite o código da disciplina)\n");
             j = 0;
 
-            while (oferta.disciplina[j].periodo == VAZIO) {
-                printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
+            while (j < 46) {
+                if (oferta.disciplina[j].periodo == VAZIO) printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
                 j++;
             }
 
             scanf("%s", mat);
 
             j = 0;
-            while (oferta.disciplina[j].periodo == VAZIO) {
+            while (j < 46) {
                 if(strcmp(mat, oferta.disciplina[j].codigo) == 0) {
                     oferta.disciplina[j].completa = 1;
                     printf("Matéria marcada como cursada.\n");
