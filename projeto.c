@@ -101,7 +101,6 @@ int main() {
         i++;
     }
 
-
     int periodoUsuario;
 
     printf("Bem vindo ao programa de aconselhamento do curso de Ciência da Computação!\n");
@@ -155,10 +154,45 @@ int main() {
         }        
     }
 
+    // verifica se o aluno já cursou alguma matéria optativa
+    if (periodoUsuario > 1){
+    char optativa;
+    printf("Você já cursou alguma matéria optativa? [S/N] ");
+    getchar();
+    scanf("%c", &optativa);
+    while(1){
+        if (optativa == 'N') break;
+        else {
+            printf("Qual matéria optativa você cursou? (Digite o código da disciplina)\n");
+            j = 0;
 
-    fclose(arquivo);
+            while (oferta.disciplina[j].periodo == VAZIO) {
+                printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
+                j++;
+            }
+
+            scanf("%s", mat);
+
+            j = 0;
+            while (oferta.disciplina[j].periodo == VAZIO) {
+                if(strcmp(mat, oferta.disciplina[j].codigo) == 0) {
+                    oferta.disciplina[j].completa = 1;
+                    printf("Matéria marcada como cursada.\n");
+                    break;
+                }
+                j++;
+            }
+        }
+
+        printf("Você já cursou mais alguma? [S/N] ");
+        getchar();
+        scanf("%c", &optativa);
+    }
+}
+    
 
     
 
+    fclose(arquivo);
     return 0;
 }
