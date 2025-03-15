@@ -81,6 +81,7 @@ int main() {
     int i = 0;
     char linha[256];
 
+    // preenche a struct com as disciplinas 
     while (fgets(linha, sizeof(linha), arquivo) != NULL && i < 46) {
         int periodo, cargaHoraria, completa;
         char codigo[TAM], nome[TAM], preRequisitosStr[256], enfase[TAM], horarioDeAula[TAM], diaDeAula[TAM];
@@ -109,12 +110,12 @@ int main() {
 
     // considera que as matérias do período passado já foram concluídas
     int j = 0;
-
     while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
         oferta.disciplina[j].completa = 1;
         j++;
     }
 
+    // verifica reprovações
     if (periodoUsuario > 1) {
         char reprovado;
         char mat[TAM];
@@ -140,6 +141,8 @@ int main() {
                 while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
                    if(strcmp(mat, oferta.disciplina[j].codigo) == 0) {
                     oferta.disciplina[j].completa = 0;
+                    printf("Matéria marcada como reprovada.\n");
+                    break;
                    }
                    j++;
                 }
