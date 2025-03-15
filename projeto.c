@@ -52,7 +52,7 @@ int main () {
     int i = 0;
     char linha[256];  // Buffer para armazenar uma linha do arquivo
 
-    while (fgets(linha, sizeof(linha), arquivo) != NULL && i < 41) {
+    while (fgets(linha, sizeof(linha), arquivo) != NULL && i < 46) {
         // Usamos sscanf para separar os campos corretamente
         int periodo, cargaHoraria, completa;
         char codigo[TAM], nome[TAM], codigoPreRequisito[TAM], enfase[TAM], horarioDeAula[TAM], diaDeAula[TAM];
@@ -127,7 +127,7 @@ int main () {
         else {
             printf("Qual dessas você já cursou? (Digite o código da disciplina)\n");
             j = 0;
-            while (j < 41) {
+            while (j < 46) {
                 if (!strchr(oferta.disciplina[j].enfase, '0')) {
                     printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
                 }
@@ -136,7 +136,7 @@ int main () {
             char cod[TAM];
             scanf("%s", cod);
             j = 0;
-            while (j < 41) {
+            while (j < 46) {
                 if(strcmp(cod, oferta.disciplina[j].codigo) == 0) {
                     oferta.disciplina[j].completa = 1;
                     break;
@@ -149,9 +149,9 @@ int main () {
         scanf("%c", &eletiva);
     }
         
-    //somente para verificação
+    // somente para verificação
     // j = 0;
-    // while (j < 41) {
+    // while (j < 46) {
     //     printarMateria(oferta.disciplina[j], 1, 1, 1, 1, 1, 1, 1, 1, 1);
     //     j++;
     // }
