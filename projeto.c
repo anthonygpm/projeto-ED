@@ -114,17 +114,48 @@ int main () {
             printf("Você reprovou em mais alguma? [S/N] ");
             getchar();
             scanf("%c", &reprovado);
-        }
-        
+        }        
     }
 
-    // somente para verificação
-    j = 0;
-    while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
-        printarMateria(oferta.disciplina[j], 1, 1, 1, 1, 1, 1, 1, 1, 1);
-        j++;
+    
+    printf("Você já cursou alguma matéria eletiva? [S/N] ");
+    getchar();
+    char eletiva;
+    scanf("%c", &eletiva);
+    while (1) {
+        if (eletiva == 'N') break;
+        else {
+            printf("Qual dessas você já cursou? (Digite o código da disciplina)\n");
+            j = 0;
+            while (j < 41) {
+                if (!strchr(oferta.disciplina[j].enfase, '0')) {
+                    printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
+                }
+                j++;
+            }
+            char cod[TAM];
+            scanf("%s", cod);
+            j = 0;
+            while (j < 41) {
+                if(strcmp(cod, oferta.disciplina[j].codigo) == 0) {
+                    oferta.disciplina[j].completa = 1;
+                    break;
+                }
+                j++;
+            }
+        }
+        printf("Você já cursou mais alguma? [S/N] ");
+        getchar();
+        scanf("%c", &eletiva);
     }
-  
+        
+    //somente para verificação
+    // j = 0;
+    // while (j < 41) {
+    //     printarMateria(oferta.disciplina[j], 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    //     j++;
+    // }
+
     fclose(arquivo);
     return 0;
 }
