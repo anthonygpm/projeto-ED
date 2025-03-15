@@ -44,24 +44,30 @@ void processarPreRequisitos(char *preRequisitosStr, Materia *materia) {
     }
 }
 
-void printarMateria(Materia m) {
+void printarMateria(Materia m, int cod, int nome, int per, int pre, int ch, int enf, int comp, int hora, int dia) {
     printf("------------------------\n");
-    printf("Código: %s\n", m.codigo);
-    printf("Nome: %s\n", m.nome);
-    printf("Período: %d\n", m.periodo);
-    printf("Pré-requisitos: ");
-    if(m.qtdPreRequisitos == 0) printf("Nenhum\n");
-    else{
-        for (int k = 0; k < m.qtdPreRequisitos; k++) {
-            printf("%s ", m.prerequisitos[k].codigo);
-    }}
-    printf("\nCarga Horária: %d\n", m.cargaHoraria);
-    printf("Ênfase: %s\n", m.enfase);
-    printf("Completa: %d\n", m.completa);
-    printf("Horário de Aula: %s\n", m.horarioDeAula);
-    printf("Dia de Aula: %s\n", m.diaDeAula);
-    printf("------------------------\n");
+    if (cod) printf("Código: %s\n", m.codigo);
+    if (nome) printf("Nome: %s\n", m.nome);
+    if (per){ 
+        printf("Período: ");
+        if(m.periodo == -999) printf("Optativa\n");
+        else printf("%d°\n", m.periodo);
+    }
+    if (pre){
+        printf("Pré-requisitos: ");
+        if (m.qtdPreRequisitos == 0) printf("Nenhum\n");
+        else{   
+            for (int i = 0; i < m.qtdPreRequisitos; i++) printf("%s ", m.prerequisitos[i].codigo);
+            printf("\n");
+        }
+    }
+    if (ch) printf("Carga Horária: %d\n", m.cargaHoraria);
+    if (enf) printf("Ênfase: %s\n", m.enfase);
+    if (comp) printf("Completa: %d\n", m.completa);
+    if (hora) printf("Horário de Aula: %s\n", m.horarioDeAula);
+    if (dia) printf("Dia de Aula: %s\n", m.diaDeAula);
 }
+
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
@@ -94,11 +100,62 @@ int main() {
         i++;
     }
 
+
+    int periodoUsuario;
+
+    printf("Bem vindo ao programa de aconselhamento do curso de Ciência da Computação!\n");
+    printf("Em qual período você está? ");
+    scanf("%d", &periodoUsuario);
+
+    // considera que as matérias do período passado já foram concluídas
+    int j = 0;
+
+    while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
+        oferta.disciplina[j].completa = 1;
+        j++;
+    }
+
+    if (periodoUsuario > 1) {
+        char reprovado;
+        char mat[TAM];
+
+        printf("Você reprovou em alguma matéria? [S/N] ");
+        getchar();
+        scanf("%c", &reprovado);
+
+        while (1) {
+            if (reprovado == 'N') break;
+            else {
+                printf("Em qual dessas você reprovou? (Digite o código da disciplina)\n");
+                j = 0;
+
+                while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
+                   printarMateria(oferta.disciplina[j], 1, 1, 0, 0, 0, 0, 0, 0, 0);
+                   j++;
+                }
+
+                scanf("%s", mat);
+
+                j = 0;
+                while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
+                   if(strcmp(mat, oferta.disciplina[j].codigo) == 0) {
+                    oferta.disciplina[j].completa = 0;
+                   }
+                   j++;
+                }
+            }
+ 
+
+            printf("Você reprovou em mais alguma? [S/N] ");
+            getchar();
+            scanf("%c", &reprovado);
+        }        
+    }
+
+
     fclose(arquivo);
 
-    for (int j = 0; j < i; j++) {
-        printarMateria(oferta.disciplina[j]);
-    }
+    
 
     return 0;
 }
