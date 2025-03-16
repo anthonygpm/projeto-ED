@@ -17,6 +17,8 @@ typedef struct {
     prerequisito prerequisitos[TAM];
     int qtdPreRequisitos;
     int cargaHoraria;
+    // 0 - obrigatória, 1 - computação visual, 2 - sistemas inteligentes
+     // 3 - sistemas de computação, 4 - sistemas de informação
     char enfase[TAM];
     int completa;
     char horarioDeAula[TAM];
@@ -190,6 +192,24 @@ int main() {
         scanf("%c", &optativa);
     }
 }
+
+    // pergunta qual enfase o aluno deseja seguir
+    char enfase;
+    printf("Qual ênfase você deseja seguir? [1 - Computação Visual, 2 - Sistemas Inteligentes, 3 - Sistemas de Computação, 4 - Sistemas de Informação] ");
+    scanf(" %c", &enfase);
+
+
+    // cria um vetor com as matérias que faltam para o aluno concluir o curso
+    Ofertas matFaltando;
+    int index = 0;
+    for (int i = 0; i < 46; i++) {
+        if (oferta.disciplina[i].completa == 0 && oferta.disciplina[i].periodo != VAZIO) {
+            matFaltando.disciplina[index++] = oferta.disciplina[i];
+        } else if (oferta.disciplina[i].completa == 0 && oferta.disciplina[i].periodo == VAZIO && strchr(oferta.disciplina[i].enfase, enfase) != NULL) {
+            matFaltando.disciplina[index++] = oferta.disciplina[i];
+        }
+    }
+
     
 
     
