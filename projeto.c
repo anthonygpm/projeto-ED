@@ -52,7 +52,7 @@ void printarMateria(Materia m, int cod, int nome, int per, int pre, int ch, int 
     if (nome) printf("Nome: %s\n", m.nome);
     if (per){ 
         printf("Período: ");
-        if(m.periodo == -999) printf("Optativa\n");
+        if(m.periodo == -VAZIO) printf("Optativa\n");
         else printf("%d°\n", m.periodo);
     }
     if (pre){
@@ -68,6 +68,36 @@ void printarMateria(Materia m, int cod, int nome, int per, int pre, int ch, int 
     if (comp) printf("Completa: %d\n", m.completa);
     if (hora) printf("Horário de Aula: %s\n", m.horarioDeAula);
     if (dia) printf("Dia de Aula: %s\n", m.diaDeAula);
+}
+
+int verificaPreReq(Materia disciplina, Ofertas oferta) {
+    if (disciplina.qtdPreRequisitos == 0) return 1;
+    
+    for (int i = 0; i < disciplina.qtdPreRequisitos; i++) {
+        int requisitoCumprido = 0;
+        for (int j = 0; j < TAM; j++) {
+            if (strcmp(disciplina.prerequisitos[i].codigo, oferta.disciplina[j].codigo) == 0 && 
+                oferta.disciplina[j].completa == 1) {
+                requisitoCumprido = 1;
+                break;
+            }
+        }
+        if (!requisitoCumprido) return 0;
+    }
+
+    return 1;
+}
+
+int verificaTurno(Materia disciplina, Ofertas cronograma, int n) {
+    if (n == 0) return 1;
+    
+    for (int i = 0; i < n; i++) {
+        if (strcmp(disciplina.diaDeAula, cronograma.disciplina[i].diaDeAula) == 0 && 
+            strcmp(disciplina.horarioDeAula, cronograma.disciplina[i].horarioDeAula) == 0) {
+            return 0;
+        }
+    }
+    return 1; 
 }
 
 
@@ -111,7 +141,7 @@ int main() {
 
     // considera que as matérias do período passado já foram concluídas
     int j = 0;
-    while (oferta.disciplina[j].periodo < periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
+    while (oferta.disciplina[j].periodo <= periodoUsuario && oferta.disciplina[j].periodo != VAZIO) {
         oferta.disciplina[j].completa = 1;
         j++;
     }
@@ -210,9 +240,35 @@ int main() {
         }
     }
 
+    int qtdMatFaltando = index;
+
+
+    // começa a lógica de aconselhamento
+    int semestresFaltando = 10 - periodoUsuario;
+    int mediaMateriasPorSemestre = qtdMatFaltando / semestresFaltando;
+    Ofertas cronogramaSemestre[semestresFaltando];
+    
+    for (int i = 0; i < semestresFaltando; i++) {
+        int add = 0;
+        for (int j = 0; j < qtdMatFaltando && add < mediaMateriasPorSemestre; j++) {
+            if (!matFaltando.disciplina[j].completa &&
+                verificaPreReq(matFaltando.disciplina[j], oferta) &&
+                verificaTurno(matFaltando.disciplina[j], cronogramaSemestre[i], add)) {
+                
+                cronogramaSemestre[i].disciplina[add] = matFaltando.disciplina[j];
+                matFaltando.disciplina[j].completa = 1;
+                for (int k = 0; k < 46; k++) {
+                    if (strcmp(oferta.disciplina[k].codigo, matFaltando.disciplina[j].codigo) == 0) {
+                        oferta.disciplina[k].completa = 1;
+                        break;
+                    }
+                }
+                add++;
+            }
+        }
+    }
     
 
-    
 
     fclose(arquivo);
     return 0;
