@@ -14,7 +14,7 @@ typedef struct
 typedef struct
 {
     char codigo[8];
-    char nome[38];
+    char nome[50];
     int periodo;
     prerequisito prerequisitos[30];
     int qtdPreRequisitos;
@@ -63,7 +63,7 @@ void preencherMaterias(Ofertas *oferta, FILE *arquivo)
     while (fgets(linha, sizeof(linha), arquivo) != NULL && i < 46)
     {
         int periodo, cargaHoraria, completa;
-        char codigo[8], nome[38], preRequisitosStr[30], enfase[5], horarioDeAula[5], diaDeAula[7];
+        char codigo[8], nome[50], preRequisitosStr[30], enfase[5], horarioDeAula[5], diaDeAula[7];
 
         sscanf(linha, "%s %s %d %s %d %s %d %s %s", codigo, nome, &periodo, preRequisitosStr, &cargaHoraria, enfase, &completa, horarioDeAula, diaDeAula);
 
@@ -121,7 +121,7 @@ void printarMateria(Materia m, int cod, int nome, int per, int pre, int ch, int 
         printf("Dia de Aula: %s\n", m.diaDeAula);
 }
 
-int verificaPreReq(Materia disciplina, Ofertas oferta)
+int verificaPreReq(Materia disciplina, Ofertas ofertaGeral)
 {
     if (disciplina.qtdPreRequisitos == 0)
         return 1;
@@ -131,8 +131,8 @@ int verificaPreReq(Materia disciplina, Ofertas oferta)
         int requisitoCumprido = 0;
         for (int j = 0; j < TAM; j++)
         {
-            if (strcmp(disciplina.prerequisitos[i].codigo, oferta.disciplina[j].codigo) == 0 &&
-                oferta.disciplina[j].completa == 1)
+            if (strcmp(disciplina.prerequisitos[i].codigo, ofertaGeral.disciplina[j].codigo) == 0 &&
+                ofertaGeral.disciplina[j].completa == 1)
             {
                 requisitoCumprido = 1;
                 break;
@@ -163,18 +163,21 @@ int numDiferenca(char *str1, char *str2)
     return diferencas;
 }
 
-int verificaMateriaColide(Ofertas *periodo, char *horarioDeAula, char *diaDeAula, char *codigo)
+int verificaMateriaColide(Ofertas matFaltando, char *horarioDeAula, char *diaDeAula, char *codigo)
 {
-    for (int i = 0; periodo->disciplina[i].periodo != 0; i++)
-    {
-        if (strcmp(periodo->disciplina[i].codigo, codigo) == 0)
-            continue;
-        if (numDiferenca(diaDeAula, periodo->disciplina[i].diaDeAula) == 3 ||
-            strcmp(diaDeAula, periodo->disciplina[i].diaDeAula) == 0)
+    for (int i = 0; i < 46; i++)
+    {    
+        if (matFaltando.disciplina[i].completa == 1)
         {
-
-            if (numDiferenca(horarioDeAula, periodo->disciplina[i].horarioDeAula) < 2)
+            if (strcmp(matFaltando.disciplina[i].codigo, codigo) == 0)
+            continue;
+            if (numDiferenca(diaDeAula, matFaltando.disciplina[i].diaDeAula) == 3 ||
+            strcmp(diaDeAula, matFaltando.disciplina[i].diaDeAula) == 0)
+            {
+                
+                if (numDiferenca(horarioDeAula, matFaltando.disciplina[i].horarioDeAula) < 2)
                 return 1;
+            }
         }
     }
 
@@ -186,11 +189,6 @@ int main()
     setlocale(LC_ALL, "Portuguese");
     Ofertas oferta;
     FILE *arquivo = fopen("materias.txt", "r");
-    if (!arquivo)
-    {
-        printf("Erro ao abrir o arquivo.\n");
-        return 1;
-    }
 
     preencherMaterias(&oferta, arquivo);
 
@@ -319,7 +317,7 @@ int main()
                 matFaltando.disciplina[index++] = oferta.disciplina[i];
         }
     }
-
+    
     int qtdMatFaltando = index;
 
     // começa a lógica de aconselhamento
@@ -328,61 +326,80 @@ int main()
     int restoMediaMateriasPorSemestre = qtdMatFaltando % semestresFaltando;
 
     // deixar as matérias em um mesmo turno
-    int qtdMatPeriodo;
-    Ofertas **periodo = malloc(10 * sizeof(Ofertas *)); 
+    char periodo[11][30];
+
+    for (int i = 0; matFaltando.disciplina[i].periodo != 0; i++)
+    {
+        printarMateria(matFaltando.disciplina[i], 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    }
 
     // separa os períodos por turnos
-    for (int i = periodoUsuario + 1; i < 10; i++)
-    {
-        for (int k = 0; k < 10; k++) {
-            periodo[k] = malloc(sizeof(Ofertas));  // No máximo 3/4 matérias por período
-        }        
-        qtdMatPeriodo = 0;
+    for (int semestre = periodoUsuario + 1; semestre <= 10; semestre++)
+    {        
+        int materiasAlocadas = 0;
         char turnoAtual;
-        for (j = 0; j < 46; j++)
+        int z = 0;
+        
+        if (semestresFaltando - semestre == restoMediaMateriasPorSemestre)
         {
-            if (semestresFaltando - i == restoMediaMateriasPorSemestre)
-                mediaMateriasPorSemestre++;
-            if (qtdMatPeriodo == mediaMateriasPorSemestre)
-                break;
-            if (matFaltando.disciplina[j].completa == 1)
+            mediaMateriasPorSemestre++;
+        }
+
+        for (j = 0; j < qtdMatFaltando && materiasAlocadas < mediaMateriasPorSemestre; j++)
+        {
+            int c = 0;
+            while (strcmp(matFaltando.disciplina[j].codigo, oferta.disciplina[c].codigo) != 0)
+                c++;
+
+            if (oferta.disciplina[c].completa == 1) 
                 continue;
-            if (qtdMatPeriodo == 0)
+            
+                
+            if (materiasAlocadas == 0)
             {
-                periodo[i]->disciplina[qtdMatPeriodo] = matFaltando.disciplina[j];
-                matFaltando.disciplina[j].completa = 1;
-                oferta.disciplina[j].completa = 1;
+                for (int a = 0; a < 7; a++, z++)
+                {
+                    periodo[semestre][z] = matFaltando.disciplina[j].codigo[a];
+                }
+                oferta.disciplina[c].completa = 1;
                 turnoAtual = matFaltando.disciplina[j].horarioDeAula[0];
-                qtdMatPeriodo++;
+                materiasAlocadas++;
             }
             else if (matFaltando.disciplina[j].horarioDeAula[0] == turnoAtual &&
-                    !verificaMateriaColide(periodo[i], matFaltando.disciplina[j].horarioDeAula, matFaltando.disciplina[j].diaDeAula, matFaltando.disciplina[j].codigo)
-                    && verificaPreReq(matFaltando.disciplina[j], oferta))
-            {
-                periodo[i]->disciplina[qtdMatPeriodo] = matFaltando.disciplina[j];
-                matFaltando.disciplina[j].completa = 1;
-                oferta.disciplina[j].completa = 1;
-                qtdMatPeriodo++;
+                !verificaMateriaColide(matFaltando, matFaltando.disciplina[j].horarioDeAula, matFaltando.disciplina[j].diaDeAula, matFaltando.disciplina[j].codigo)
+                && verificaPreReq(matFaltando.disciplina[j], oferta))
+                {
+                    int a = 0;
+                    for (int a = 0; a < 7; a++, z++)
+                    {
+                        periodo[semestre][z] = matFaltando.disciplina[j].codigo[a];
+                    }
+                    oferta.disciplina[c].completa = 1;
+                    materiasAlocadas++;   
+                }
             }
         }
-
-        printf("------ Período %d ------\n", i);
-        for (int z = 0; periodo[i]->disciplina[z].periodo != 0; z++)
+        
+    for(int i = periodoUsuario+1; i < 11; i++)
+    {
+        printf("Período %d: ", i);
+        for (int z = 0; z < 30; z++)
         {
-            printarMateria(periodo[i]->disciplina[z], 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            printf("%c", periodo[i][z]);
         }
-        printf("-----------------------\n");
+        printf("\n");
     }
+        
+        // for(int i = 0; i < 10; i++)
+        // {
+        //     printf("\n------ Período %d ------\n", i+(periodoUsuario+1));
+        //     for (int z = 0; z < 24; z++)
+        //     {
+        //         printf("%c", periodo[i][z]);
+        //     }
+        //     printf("\n-----------------------\n");
+        // }
 
-    for (int i = 0; i < 10; i++) {
-        if (periodo[i]) {
-            free(periodo[i]->disciplina);
-            free(periodo[i]); 
-        }
-    }
-    free(periodo);
-    
-    
     
     fclose(arquivo);
     return 0;
