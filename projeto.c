@@ -380,25 +380,30 @@ int main()
             }
         }
         
-    for(int i = periodoUsuario+1; i < 11; i++)
+    // imprime o plano de estudos sugerido
+    printf("\nPlano de estudos sugerido:\n");
+    for (int semestre = periodoUsuario + 1; semestre <= 10; semestre++)
     {
-        printf("Período %d: ", i);
-        for (int z = 0; z < 30; z++)
+        printf("\nSemestre %d:\n", semestre);
+        
+        int numMaterias = strlen(periodo[semestre]) / 7; 
+        for (int i = 0; i < numMaterias; i++)
         {
-            printf("%c", periodo[i][z]);
+            char codigoMateria[8];
+            strncpy(codigoMateria, &periodo[semestre][i * 7], 7);
+            codigoMateria[7] = '\0';
+
+            for (int j = 0; j < 46; j++)
+            {
+                if (strcmp(oferta.disciplina[j].codigo, codigoMateria) == 0)
+                {
+                    printarMateria(oferta.disciplina[j], 0, 1, 0, 0, 0, 0, 0, 0, 0);
+                    break;
+                }
+            }
         }
-        printf("\n");
     }
         
-        // for(int i = 0; i < 10; i++)
-        // {
-        //     printf("\n------ Período %d ------\n", i+(periodoUsuario+1));
-        //     for (int z = 0; z < 24; z++)
-        //     {
-        //         printf("%c", periodo[i][z]);
-        //     }
-        //     printf("\n-----------------------\n");
-        // }
 
     
     fclose(arquivo);
