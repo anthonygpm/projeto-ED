@@ -257,7 +257,7 @@ int main ()
     int qtdMatFaltando = 0;
     for(int i = 0; i < 46; i++)
     {
-        if (disciplinas[i].periodo != -999 && disciplinas[i].completa == 0)
+        if ((strcmp(disciplinas[i].enfase, "0") == 0) && disciplinas[i].completa == 0)
         {
             disciplinas[i].escolha = 1;
             qtdMatFaltando++;
@@ -310,7 +310,8 @@ int main ()
                 break;
         }
     }
-    
+
+
     for(int i = periodoUsuario; i < 10; i++)
     {
         printf("Período %d:\n", i+1);
