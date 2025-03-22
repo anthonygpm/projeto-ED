@@ -316,7 +316,16 @@ int main ()
         printf("Período %d:\n", i+1);
         for(int j = 0; j < 6; j++)
         {
-            printf("id: %d | ", periodo[i][j]);
+            if(periodo[i][j] != -1){
+                for(int k = 0; k < 46; k++)
+                {
+                    if(disciplinas[k].id == periodo[i][j])
+                    {
+                        printarMateria(disciplinas[k], 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                        break;
+                    }
+                }
+            }
         }
         printf("\n----------------------------------------------------\n");
     }
