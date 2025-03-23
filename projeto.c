@@ -4,6 +4,11 @@
 
 typedef struct
 {
+    char dia[4];
+} DiaDeAula;
+
+typedef struct
+{
     char codigo[50];
 } prerequisito;
 
@@ -23,8 +28,24 @@ typedef struct
     int completa;
     int alocada;
     char horarioDeAula[5];
-    char diaDeAula[7];
+    DiaDeAula diasDeAula[2];
+    int qtdDiasDeAula;
 } Materia;
+
+void processarDiasDeAula(char *diasStr, Materia *disciplina)
+{
+    disciplina->qtdDiasDeAula = 0;
+    int len = strlen(diasStr);
+    int i = 0;
+
+    while (i < len && disciplina->qtdDiasDeAula < 2)
+    {
+        strncpy(disciplina->diasDeAula[disciplina->qtdDiasDeAula].dia, &diasStr[i], 3);
+        disciplina->diasDeAula[disciplina->qtdDiasDeAula].dia[3] = '\0'; // Garante terminação da string
+        disciplina->qtdDiasDeAula++;
+        i += 3; // Avança para o próximo grupo de três caracteres
+    }
+}
 
 void processarPreRequisitos(char *preRequisitosStr, Materia *disciplina)
 {
@@ -50,15 +71,14 @@ void preencherMaterias(Materia *disciplina, FILE *arquivo)
 {
     int i = 0;
     char linha[256];
-    
-    // preenche a struct com as disciplinas
+
     while (fgets(linha, sizeof(linha), arquivo) != NULL && i < 46)
     {
         int periodo, cargaHoraria, completa, id;
-        char codigo[8], nome[50], preRequisitosStr[100], enfase[5], horarioDeAula[5], diaDeAula[7];
-        
-        sscanf(linha, "%d %s %s %d %s %d %s %d %s %s", &id, codigo, nome, &periodo, preRequisitosStr, &cargaHoraria, enfase, &completa, horarioDeAula, diaDeAula);
-        
+        char codigo[8], nome[50], preRequisitosStr[100], enfase[5], horarioDeAula[5], diasDeAulaStr[50];
+
+        sscanf(linha, "%d %s %s %d %s %d %s %d %s %s", &id, codigo, nome, &periodo, preRequisitosStr, &cargaHoraria, enfase, &completa, horarioDeAula, diasDeAulaStr);
+
         disciplina[i].id = id;
         strcpy(disciplina[i].codigo, codigo);
         strcpy(disciplina[i].nome, nome);
@@ -69,15 +89,16 @@ void preencherMaterias(Materia *disciplina, FILE *arquivo)
         disciplina[i].completa = completa;
         disciplina[i].alocada = 0;
         strcpy(disciplina[i].horarioDeAula, horarioDeAula);
-        strcpy(disciplina[i].diaDeAula, diaDeAula);
-        
-        processarPreRequisitos(preRequisitosStr, &disciplina[i]);
+
+        processarPreRequisitos(preRequisitosStr, &disciplina[i]); // Mantemos o processamento de pré-requisitos
+        processarDiasDeAula(diasDeAulaStr, &disciplina[i]);       // Agora processamos os dias de aula
+
         i++;
     }
 }
 
 void printarMateria(Materia m, int id, int cod, int nome, int per, int pre, int ch, int enf, int esc, int comp, int hora, int dia, int aloc)
-{   
+{
     printf("------------------------\n");
     if (id)
         printf("ID: %d\n", m.id);
@@ -116,7 +137,12 @@ void printarMateria(Materia m, int id, int cod, int nome, int per, int pre, int 
     if (hora)
         printf("Horário de Aula: %s\n", m.horarioDeAula);
     if (dia)
-        printf("Dia de Aula: %s\n", m.diaDeAula);
+    {
+        printf("Dias de Aula: ");
+        for (int i = 0; i < m.qtdDiasDeAula; i++)
+            printf("%s ", m.diasDeAula[i].dia);
+        printf("\n");
+    }
     if (aloc)
         printf("Alocada: %d\n", m.alocada);
 }
@@ -139,34 +165,37 @@ int numDiferenca(char *str1, char *str2)
     return diferencas;
 }
 
-int verificaMateriaColide(int periodo[11][6], char *horarioDeAula, char *diaDeAula, char *codigo, int semestre, Materia *disciplinas)
-{ 
-    for(int j = 0; j < 6; j++)
+int verificaMateriaColide(int periodo[11][6], char *horarioDeAula, DiaDeAula *dias, char *codigo, int semestre, Materia *disciplinas)
+{
+    for (int j = 0; j < 6; j++)
     {
-        if (periodo[semestre][j] == -1) 
+        if (periodo[semestre][j] == -1)
             break;
-        
+
         int i;
         for (i = 0; i < 46; i++)
         {
-            if (disciplinas[i].id = periodo[semestre][j])
+            if (disciplinas[i].id == periodo[semestre][j])
                 break;
         }
-        
+
         if (strcmp(disciplinas[i].codigo, codigo) == 0)
             continue;
 
-        if (numDiferenca(diaDeAula, disciplinas[i].diaDeAula) == 3 ||
-        strcmp(diaDeAula, disciplinas[i].diaDeAula) == 0)
+        for (int z = 0; z < disciplinas[i].qtdDiasDeAula; z++)
         {
-            if (numDiferenca(horarioDeAula, disciplinas[i].horarioDeAula) < 2)
-            return 1;
+            char dia[4];
+            strncpy(dia, dias[z].dia, 3);
+            if (strcmp(dia, disciplinas[i].diasDeAula[z].dia) == 0)
+            {
+                if (numDiferenca(horarioDeAula, disciplinas[i].horarioDeAula) < 2)
+                    return 1;
+            }
         }
     }
 
     return 0;
 }
-
 
 int verificaPreReq(Materia disciplina, Materia *oferta)
 {
@@ -192,12 +221,15 @@ int verificaPreReq(Materia disciplina, Materia *oferta)
     return 1;
 }
 
-int main ()
+int main()
 {
     Materia disciplinas[46];
     FILE *arquivo = fopen("materias.txt", "r");
     int periodo[11][6];
-    memset(periodo, -1, sizeof(periodo));
+    for (int i = 0; i < 11; i++)
+        for (int j = 0; j < 6; j++)
+            periodo[i][j] = -1;
+
     char calouro;
     int periodoUsuario = 0;
 
@@ -207,10 +239,10 @@ int main ()
     printf("Você é calouro? [s/n] ");
     scanf("%c", &calouro);
     if (calouro == 'n')
-    {        
+    {
         printf("Em qual período você está? ");
         scanf("%d", &periodoUsuario);
-        
+
         // cadastro das matérias que já foram concluídas
         char continuar;
         int encontrada = 0;
@@ -230,65 +262,63 @@ int main ()
                     if (media >= 7)
                     {
                         disciplinas[i].completa = 1;
-                        if (strcmp(codigo, "COMP382") == 0) 
-                            disciplinas[i+1].completa = 1;
+                        if (strcmp(codigo, "COMP382") == 0)
+                            disciplinas[i + 1].completa = 1;
                     }
                     encontrada = 1;
-                    break;    
-                }    
+                    break;
+                }
             }
             if (encontrada)
-                printf("Matéria cadastrada com sucesso.\n");   
+                printf("Matéria cadastrada com sucesso.\n");
             else
                 printf("Matéria não encontrada.\n");
 
             printf("Deseja cadastrar mais alguma? [s/n] ");
             scanf(" %c", &continuar);
 
-        } while (continuar == 's');    
+        } while (continuar == 's');
     }
 
     // pergunta qual enfase o aluno deseja seguir
     char enfase;
     printf("Qual ênfase você deseja seguir? [1 - Computação Visual, 2 - Sistemas Inteligentes, 3 - Sistemas de Computação, 4 - Sistemas de Informação] ");
     scanf(" %c", &enfase);
-    
+
     // as matérias que serão cursadas, terão o atributo escolha == 1
     int qtdMatFaltando = 0;
-    for(int i = 0; i < 46; i++)
+    for (int i = 0; i < 46; i++)
     {
-        if ((strcmp(disciplinas[i].enfase, "0") == 0) && disciplinas[i].completa == 0)
+        if (disciplinas[i].periodo != -999 && disciplinas[i].completa == 0)
         {
             disciplinas[i].escolha = 1;
             qtdMatFaltando++;
-        }    
+        }
         else if (strchr(disciplinas[i].enfase, enfase) != NULL && disciplinas[i].completa == 0)
         {
             disciplinas[i].escolha = 1;
             qtdMatFaltando++;
-        }    
+        }
     }
-          
+
     // começa a lógica de aconselhamento
     int semestresFaltando = 10 - periodoUsuario;
     int mediaMateriasPorSemestre = qtdMatFaltando / semestresFaltando;
     int restoMediaMateriasPorSemestre = qtdMatFaltando % semestresFaltando;
 
     for (int semestre = periodoUsuario; semestre < 10; semestre++)
-    {        
+    {
         int materiasAlocadas = 0;
         char turnoAtual;
         int j = 0;
-        
-        if (semestresFaltando - semestre == restoMediaMateriasPorSemestre + 1)
-            mediaMateriasPorSemestre++;
+        int aumentou = 0;
 
-        for (int i = 0; materiasAlocadas < mediaMateriasPorSemestre && i < 46; i++)
+        for (int i = 0; materiasAlocadas <= mediaMateriasPorSemestre && i < 46; i++)
         {
             if (disciplinas[i].escolha == 0 || disciplinas[i].completa == 1 || disciplinas[i].alocada == 1)
                 continue;
 
-                if (materiasAlocadas == 0)
+            if (materiasAlocadas == 0)
             {
                 periodo[semestre][j++] = disciplinas[i].id;
                 disciplinas[i].alocada = 1;
@@ -297,30 +327,39 @@ int main ()
                 materiasAlocadas++;
             }
             else if (disciplinas[i].horarioDeAula[0] == turnoAtual &&
-                !verificaMateriaColide(periodo, disciplinas[i].horarioDeAula, disciplinas[i].diaDeAula, disciplinas[i].codigo, semestre, disciplinas)
-                && verificaPreReq(disciplinas[i], disciplinas))
+                     !verificaMateriaColide(periodo, disciplinas[i].horarioDeAula, disciplinas[i].diasDeAula, disciplinas[i].codigo, semestre, disciplinas) && verificaPreReq(disciplinas[i], disciplinas))
             {
                 periodo[semestre][j++] = disciplinas[i].id;
                 disciplinas[i].alocada = 1;
                 disciplinas[i].completa = 1;
-                materiasAlocadas++;   
+                materiasAlocadas++;
             }
-            
-            if (materiasAlocadas >= 6) 
+
+            if (materiasAlocadas >= 6)
                 break;
         }
     }
 
-
-    for(int i = periodoUsuario; i < 10; i++)
+    for (int i = periodoUsuario; i < 10; i++)
     {
-        printf("Período %d:\n", i+1);
-        for(int j = 0; j < 6; j++)
+        printf("Período %d:\n", i + 1);
+        for (int j = 0; j < 6; j++)
         {
-            if(periodo[i][j] != -1){
-                for(int k = 0; k < 46; k++)
+            printf("id: %d | ", periodo[i][j]);
+        }
+        printf("\n----------------------------------------------------\n");
+    }
+
+    for (int i = periodoUsuario; i < 10; i++)
+    {
+        printf("Período %d:\n", i + 1);
+        for (int j = 0; j < 6; j++)
+        {
+            if (periodo[i][j] != -1)
+            {
+                for (int k = 0; k < 46; k++)
                 {
-                    if(disciplinas[k].id == periodo[i][j])
+                    if (disciplinas[k].id == periodo[i][j])
                     {
                         printarMateria(disciplinas[k], 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                         break;
@@ -329,6 +368,12 @@ int main ()
             }
         }
         printf("\n----------------------------------------------------\n");
+    }
+
+    for (int i = 0; i < 46; i++)
+    {
+        if (disciplinas[i].alocada == 0 && disciplinas[i].escolha == 1)
+            printarMateria(disciplinas[i], 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     return 0;
