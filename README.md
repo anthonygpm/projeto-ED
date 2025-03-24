@@ -4,3 +4,4 @@ Projeto de Estrutura de Dados para criar um sistema de aconselhamento para o cur
 Colaboradores:
 - Anthony Gabriel Paulino de Moura
 - Vinícius Gabriel Silva Santiago
+- Lucas Teodósio Maciel de Oliveira
