@@ -32,6 +32,18 @@ typedef struct
     int qtdDiasDeAula;
 } Materia;
 
+int compararMaterias(const void *a, const void *b)
+{
+    Materia *materiaA = (Materia *)a;
+    Materia *materiaB = (Materia *)b;
+    return materiaA->qtdPreRequisitos - materiaB->qtdPreRequisitos;
+}
+
+void ordenarMateriasPorRequisitos(Materia *disciplinas, int tamanho)
+{
+    qsort(disciplinas, tamanho, sizeof(Materia), compararMaterias);
+}
+
 void processarDiasDeAula(char *diasStr, Materia *disciplina)
 {
     disciplina->qtdDiasDeAula = 0;
@@ -197,7 +209,7 @@ int verificaMateriaColide(int periodo[11][6], char *horarioDeAula, DiaDeAula *di
     return 0;
 }
 
-int verificaPreReq(Materia disciplina, Materia *oferta)
+int verificaPreReq(Materia disciplina, Materia *oferta, int *periodo)
 {
     if (disciplina.qtdPreRequisitos == 0)
         return 1;
@@ -208,7 +220,7 @@ int verificaPreReq(Materia disciplina, Materia *oferta)
         for (int j = 0; j < 46; j++)
         {
             if (strcmp(disciplina.prerequisitos[i].codigo, oferta[j].codigo) == 0 &&
-                (oferta[j].completa == 1 || oferta[j].alocada == 1))
+                (oferta[j].completa == 1))
             {
                 requisitoCumprido = 1;
                 break;
@@ -219,6 +231,26 @@ int verificaPreReq(Materia disciplina, Materia *oferta)
     }
 
     return 1;
+}
+
+int somaCargaHorariaPeriodo(int periodo[11][6], int semestre, Materia *disciplinas)
+{
+    int soma = 0;
+    for (int j = 0; j < 6; j++)
+    {
+        if (periodo[semestre][j] == -1)
+            break;
+
+        for (int i = 0; i < 46; i++)
+        {
+            if (disciplinas[i].id == periodo[semestre][j])
+            {
+                soma += disciplinas[i].cargaHoraria;
+                break;
+            }
+        }
+    }
+    return soma;
 }
 
 int main()
@@ -234,6 +266,8 @@ int main()
     int periodoUsuario = 0;
 
     preencherMaterias(disciplinas, arquivo);
+
+    ordenarMateriasPorRequisitos(disciplinas, 46);
 
     printf("Olá! Bem-vindo ao programa de aconselhamento do curso de Ciência da Computação!\n");
     printf("Você é calouro? [s/n] ");
@@ -306,12 +340,32 @@ int main()
     int mediaMateriasPorSemestre = qtdMatFaltando / semestresFaltando;
     int restoMediaMateriasPorSemestre = qtdMatFaltando % semestresFaltando;
 
+    int materiasAlocadas = 0;
     for (int semestre = periodoUsuario; semestre < 10; semestre++)
     {
-        int materiasAlocadas = 0;
+        if (materiasAlocadas > 0 && semestre > periodoUsuario)
+        {
+            for (int k = 0; k < 6; k++)
+            {
+            if (periodo[semestre - 1][k] != -1)
+            {
+                for (int l = 0; l < 46; l++)
+                {
+                if (disciplinas[l].id == periodo[semestre - 1][k])
+                {
+                    disciplinas[l].completa = 1;
+                    break;
+                }
+                }
+            }
+            }
+        }
+
+        materiasAlocadas = 0;
         char turnoAtual;
         int j = 0;
         int aumentou = 0;
+        
 
         for (int i = 0; materiasAlocadas <= mediaMateriasPorSemestre && i < 46; i++)
         {
@@ -322,32 +376,22 @@ int main()
             {
                 periodo[semestre][j++] = disciplinas[i].id;
                 disciplinas[i].alocada = 1;
-                disciplinas[i].completa = 1;
                 turnoAtual = disciplinas[i].horarioDeAula[0];
                 materiasAlocadas++;
             }
             else if (disciplinas[i].horarioDeAula[0] == turnoAtual &&
-                     !verificaMateriaColide(periodo, disciplinas[i].horarioDeAula, disciplinas[i].diasDeAula, disciplinas[i].codigo, semestre, disciplinas) && verificaPreReq(disciplinas[i], disciplinas))
+                     !verificaMateriaColide(periodo, disciplinas[i].horarioDeAula, disciplinas[i].diasDeAula, disciplinas[i].codigo, semestre, disciplinas) &&
+                     verificaPreReq(disciplinas[i], disciplinas, periodo[i]) &&
+                     (somaCargaHorariaPeriodo(periodo, semestre, disciplinas) + disciplinas[i].cargaHoraria <= 360))
             {
                 periodo[semestre][j++] = disciplinas[i].id;
                 disciplinas[i].alocada = 1;
-                disciplinas[i].completa = 1;
                 materiasAlocadas++;
             }
 
             if (materiasAlocadas >= 6)
                 break;
         }
-    }
-
-    for (int i = periodoUsuario; i < 10; i++)
-    {
-        printf("Período %d:\n", i + 1);
-        for (int j = 0; j < 6; j++)
-        {
-            printf("id: %d | ", periodo[i][j]);
-        }
-        printf("\n----------------------------------------------------\n");
     }
 
     for (int i = periodoUsuario; i < 10; i++)
@@ -370,11 +414,15 @@ int main()
         printf("\n----------------------------------------------------\n");
     }
 
+    printf("Matérias não alocadas:\n");
     for (int i = 0; i < 46; i++)
     {
-        if (disciplinas[i].alocada == 0 && disciplinas[i].escolha == 1)
-            printarMateria(disciplinas[i], 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        if (disciplinas[i].escolha == 1 && disciplinas[i].alocada == 0)
+        {
+            printarMateria(disciplinas[i], 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        }
     }
+
 
     return 0;
 }
