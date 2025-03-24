@@ -8,8 +8,7 @@
 int main()
 {
     Materia disciplinas[46];
-    FILE *arquivo = fopen("materias.txt", "r");
-    int periodo[11][6];
+    FILE *arquivo = fopen("../input/materias.txt", "r");    int periodo[11][6];
     for (int i = 0; i < 11; i++)
         for (int j = 0; j < 6; j++)
             periodo[i][j] = -1;
