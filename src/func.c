@@ -1,4 +1,3 @@
-// materia.c
 #include "header.h"
 #include <stdlib.h>
 #include <string.h>
