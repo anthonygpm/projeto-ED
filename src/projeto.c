@@ -165,7 +165,7 @@ int main()
         printf("\n----------------------------------------------------\n");
     }
 
-    printf("Matérias não alocadas:\n");
+    printf("Matérias não alocadas por algum conflito:\n");
     int count = 0;
     for (int i = 0; i < 46; i++)
     {
