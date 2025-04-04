@@ -23,7 +23,7 @@ int main()
     printf("Olá! Bem-vindo ao programa de aconselhamento do curso de Ciência da Computação!\n");
     printf("Você é calouro? [s/n] ");
     scanf("%c", &calouro);
-    if (calouro == 'n')
+    if (calouro == 'n' || calouro == 'N')
     {
         printf("Em qual período você está? ");
         scanf("%d", &periodoUsuario);
@@ -62,7 +62,7 @@ int main()
             printf("Deseja cadastrar mais alguma? [s/n] ");
             scanf(" %c", &continuar);
 
-        } while (continuar == 's');
+        } while (continuar == 's' || continuar == 'S');
     }
 
     // pergunta qual enfase o aluno deseja seguir
